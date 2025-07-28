@@ -15,11 +15,15 @@ client = OpenAI(api_key=openai.api_key)
 
 #Extract text from the uploaded PDF file
 def extract_pdf_text(file):
-    reader = PdfReader(file.name) 
+    reader = PdfReader(file.name)
     complete_text = ""
     for page in reader.pages:
-        complete_text += page.extract_text() + "\n"
+        text = page.extract_text()
+        if text:
+            complete_text += text + "\n"
     return complete_text.strip()
+
+
 
 # Make grammatical changes and change the tone of the text using OpenAI's API
 def get_openai_response(text, tone=None):
@@ -27,16 +31,15 @@ def get_openai_response(text, tone=None):
     system_prompt += "You have the qualifications of a professional editor who has completed a PhD in English and has 20 years of experience in editing and writing."
 
 #To get better output we give the model a much better prompt that helps is think in a more structured way
-    if tone:
-        system_prompt += f" Rewrite the text in a {tone} tone."
-    elif tone == "Gen-z":
+    if tone == "Gen-z":
         system_prompt += " Rewrite the text in a Gen-Z tone, using slang and informal language. Make it sound trendy and relatable to a younger audience."
     elif tone == "Kafkaesque":
         system_prompt += " Rewrite the text in a Kafkaesque tone, making it surreal, nightmarish, and absurd. Use complex and disorienting language to create a sense of unease."
         system_prompt += "Franz Kafka's profound sadness stemmed from a confluence of personal struggles, including a difficult relationship with his father, health issues, and feelings of alienation and self-doubt."
-    
+
+    system_prompt += f" Rewrite the text in a {tone} tone."
     response = client.chat.completions.create(
-        model="gpt-4o mini",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text}
