@@ -1,0 +1,7 @@
+UI: Gradio
+Hosting: Hugging Face Spaces
+Text Highlighting: redlines
+Pdf Reader: pypdf
+API: OpenAI (GPT-4 or GPT-4o)
+Tone Transformation Options: Formal, Assertive, Negative, Sarcastic, Humorous, Kafkaesque, Gen-z
+
