@@ -5,22 +5,22 @@ import re
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# Load environment variables
+#Environment variables
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    
+
 def highlight_keywords(text, keywords):
-    keywords = sorted(set(keywords), key=lambda x: -len(x))  # Longest match first
+    keywords = sorted(set(keywords), key=lambda x: -len(x))
     for word in keywords:
         pattern = re.compile(rf'\b({re.escape(word)})\b', re.IGNORECASE)
         text = pattern.sub(r'<mark style="background-color: #fff3cd;"><b>\1</b></mark>', text)
     return text
 
 
-# Streamlit page setup
+#To setup the landing page of the streamlit app
 st.set_page_config(page_title="Research Paper Analyzer", layout="wide")
 
-# Custom CSS to match your Figma style
+#CSS styles for the app
 st.markdown("""
     <style>
     html, body {
@@ -52,12 +52,9 @@ st.markdown("""
     }
     </style>
 """, unsafe_allow_html=True)
-
-# Main title & subtitle
 st.markdown("<div class='title'>📄 Research Paper Analyzer</div>", unsafe_allow_html=True)
 st.markdown("<div class='subtitle'>Understand, summarize, and critique your research paper with AI assistance.</div>", unsafe_allow_html=True)
 
-# 2-column layout: controls (left), output (right)
 left, right = st.columns([1, 2], gap="large")
 
 with left:
@@ -73,24 +70,20 @@ with left:
 
 with right:
     if uploaded_file and run_analysis:  
-        # Extract text from PDF
-        reader = PdfReader(uploaded_file)
+        reader = PdfReader(uploaded_file)   #To extract text from the PDF
         text = "\n".join(page.extract_text() for page in reader.pages if page.extract_text())
 
         if len(text) > 15000:
             st.warning("Text is too long. Trimming to first 15,000 characters.")
             text = text[:15000]
 
-        # Generate prompt
-        prompt = f"""You are an academic research assistant with expertise in analyzing research papers. You have a phd in the field of artifical intelligence and have read thousands of research papers. 
-The user has uploaded a research paper. Provide a {review_type.lower()} in a {tone.lower()} tone, 
-intended for a {audience.lower()} audience.
-sUse headings like:
-- Abstract Summary
-- Research Objective
-- Methodology Insights
-- Strengths & Limitations
-- Conclusion"""
+        prompt = f"""You are an academic research assistant with expertise in analyzing research papers. You have a phd in the field of artifical intelligence and have read thousands of research papers. The user has uploaded a research paper. Provide a {review_type.lower()} in a {tone.lower()} tone, intended for a {audience.lower()} audience.
+                    Use headings like:
+                    - Abstract Summary
+                    - Research Objective
+                    - Methodology Insights
+                    - Strengths & Limitations
+                    - Conclusion"""
         if tone == "Technical":
             prompt += " Use technical jargon and detailed explanations."
         elif tone == "Simplified":
@@ -107,7 +100,7 @@ sUse headings like:
                 \"\"\"
         """
 
-        # --- Ask GPT to extract important keywords (scientific, technical, conceptual) ---
+        #To extract keywords from the paper
         with st.spinner("Extracting keywords..."):
              keyword_response = client.chat.completions.create(
                 model="gpt-4",
