@@ -1,0 +1,90 @@
+from crewai import Agent as CrewAgent
+from crewai import Task     
+from crewai import Crew
+from dotenv import load_dotenv
+import os   
+from agents.therapist_agent import therapist_agent
+from agents.exercise_agent import exercise_agent
+from agents.crisis_agent import crisis_agent
+from agents.affirmations_agent import affirmations_agent
+
+load_dotenv()
+
+
+def route_user_input(user_input):
+    input_lower = user_input.lower()
+    if "end it all" in input_lower or "i can't take it anymore" in input_lower:
+        return "crisis"
+    elif "affirmations" in input_lower or "lonely" in input_lower:
+        return "affrimation"
+    elif "exercise" in input_lower or "stress" in input_lower:
+        return "exercise"
+    else:
+        return "therapist"
+    
+
+def create_therapy_task(user_input):
+    return Task(
+        description=f"User said: \"{user_input}\".Offer a calming and soothing solution for the user input",
+        expected_output="A warm, empathetic response that validates the user's feelings and reframes their situation constructively.",
+        agent=therapist_agent
+    )
+
+def create_exercise_task(user_input):
+    return Task(
+        description=f"User said: \"{user_input}\". Offer a structured mental health exercise or journaling prompt.",
+        expected_output="A structured mental health exercise tailored to the user's concern. "
+                        "This may include a mindfulness activity, journaling prompt, CBT technique, or a calming strategy. "
+                        "Ensure it is easy to follow, safe, and empowering for self-guided practice.",
+        agent=exercise_agent
+    )
+
+def create_affirmation_task(user_input):
+    return Task(
+        description=f"User said: \"{user_input}\". Provide affirmations and self-connection advice.",
+        expected_output="A list of 3 to 5 personalized affirmations based on the user's emotions, "
+                        "paired with one self-connection activity (e.g., journaling, meditation, creative expression). "
+                        "Affirmations should feel emotionally relevant, warm, and empowering.",
+        agent=affirmations_agent
+    )
+
+def create_crisis_task(user_input):
+    return Task(
+        description=f"User said: \"{user_input}\". Respond with empathy and immediately refer to helplines or human support. Don't give medical advice.",
+        expected_output="A short empathetic message that acknowledges the user's emotional pain, "
+                        "urges them to reach out for human help immediately, and provides a list of emergency mental health resources. "
+                        "Avoid providing any medical advice. Always include a disclaimer that this is not a substitute for licensed therapy.",
+        agent=crisis_agent
+    )
+
+
+def run_therapy_workflow(user_input):
+    intent = route_user_input(user_input)
+
+    if intent == "crisis":
+        task = create_crisis_task(user_input)
+        agent = crisis_agent
+    elif intent == "affirmation":
+        task = create_affirmation_task(user_input)
+        agent = affirmations_agent
+    elif intent == "exercise":
+        task = create_exercise_task(user_input)
+        agent = exercise_agent
+    else:
+        task = create_therapy_task(user_input)
+        agent = therapist_agent
+
+    crew = Crew(
+        agents=[agent],
+        tasks=[task],
+        verbose=True
+    )
+
+    return crew.kickoff()
+
+
+if __name__ == "__main__":
+    user_input = input("How are you feeling today? ")
+    result = run_therapy_workflow(user_input)
+    print("\n🧠 Therapist Response:\n")
+    print(result)
